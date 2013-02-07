@@ -306,10 +306,10 @@ WHILE @Column_ID IS NOT NULL
 					'COALESCE('''''''' + RTRIM(CONVERT(char,' + @Column_Name + ',109) COLLATE DATABASE_DEFAULT)+'''''''',''NULL'')'
 			WHEN @Data_Type IN ('uniqueidentifier')
 				THEN
-					'COALESCE('''''''' + REPLACE(CONVERT(char(255),RTRIM(' + @Column_Name + ') COLLATE DATABASE_DEFAULT),'''''''','''''''''''')+'''''''',''NULL'')'
+					'COALESCE('''''''' + REPLACE(CONVERT(varchar(128),RTRIM(' + @Column_Name + ') COLLATE DATABASE_DEFAULT),'''''''','''''''''''')+'''''''',''NULL'')'
 			WHEN @Data_Type IN ('text','ntext')
 				THEN
-					'COALESCE('''''''' + REPLACE(CONVERT(char(8000),' + @Column_Name + ') COLLATE DATABASE_DEFAULT,'''''''','''''''''''')+'''''''',''NULL'')'
+					'COALESCE('''''''' + REPLACE(CONVERT(varchar(max),' + @Column_Name + ') COLLATE DATABASE_DEFAULT,'''''''','''''''''''')+'''''''',''NULL'')'
 			WHEN @Data_Type IN ('binary','varbinary')
 				THEN
 					'COALESCE(RTRIM(CONVERT(char,' + 'CONVERT(int,' + @Column_Name + ') COLLATE DATABASE_DEFAULT) COLLATE DATABASE_DEFAULT),''NULL'')'
@@ -324,9 +324,9 @@ WHILE @Column_ID IS NOT NULL
 					END
 			WHEN @Data_Type IN ('float','real','money','smallmoney')
 				THEN
-					'COALESCE(LTRIM(RTRIM(' + 'CONVERT(char, ' +  @Column_Name  + ',2) COLLATE DATABASE_DEFAULT' + ')),''NULL'')'
+					'COALESCE(LTRIM(RTRIM(' + 'CONVERT(varchar, ' +  @Column_Name  + ',2) COLLATE DATABASE_DEFAULT' + ')),''NULL'')'
 			ELSE
-				'COALESCE(LTRIM(RTRIM(' + 'CONVERT(char, ' +  @Column_Name  + ') COLLATE DATABASE_DEFAULT' + ')),''NULL'')'
+				'COALESCE(LTRIM(RTRIM(' + 'CONVERT(varchar, ' +  @Column_Name  + ') COLLATE DATABASE_DEFAULT' + ')),''NULL'')'
 		END   + '+' +  ''',''' + ' + '
 
 		--Generating the column list for the INSERT statement
