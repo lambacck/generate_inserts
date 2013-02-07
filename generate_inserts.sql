@@ -1,3 +1,4 @@
+
 SET NOCOUNT ON
 GO
 
@@ -29,18 +30,18 @@ CREATE PROC sp_generate_inserts
 	@cols_to_exclude varchar(8000) = NULL,	-- List of columns to be excluded from the INSERT statement
 	@disable_constraints bit = 0,		-- When 1, disables foreign key constraints and enables them after the INSERT statements
 	@ommit_computed_cols bit = 0		-- When 1, computed columns will not be included in the INSERT statement
-	
+
 )
 AS
 BEGIN
 
 /***********************************************************************************************************
-Procedure:	sp_generate_inserts  (Build 22) 
+Procedure:	sp_generate_inserts  (Build 22)
 		(Copyright © 2002 Narayana Vyas Kondreddi. All rights reserved.)
-                                          
-Purpose:	To generate INSERT statements from existing data. 
+
+Purpose:	To generate INSERT statements from existing data.
 		These INSERTS can be executed to regenerate the data at some other location.
-		This procedure is also useful to create a database setup, where in you can 
+		This procedure is also useful to create a database setup, where in you can
 		script your data along with your table definitions.
 
 Written by:	Narayana Vyas Kondreddi
@@ -68,23 +69,23 @@ NOTE:		This procedure may not work with tables with too many columns.
 		like nchar and nvarchar
 
 		ALSO NOTE THAT THIS PROCEDURE IS NOT UPDATED TO WORK WITH NEW DATA TYPES INTRODUCED IN SQL SERVER 2005 / YUKON
-		
+
 
 Example 1:	To generate INSERT statements for table 'titles':
-		
+
 		EXEC sp_generate_inserts 'titles'
 
 Example 2: 	To ommit the column list in the INSERT statement: (Column list is included by default)
 		IMPORTANT: If you have too many columns, you are advised to ommit column list, as shown below,
 		to avoid erroneous results
-		
+
 		EXEC sp_generate_inserts 'titles', @include_column_list = 0
 
 Example 3:	To generate INSERT statements for 'titlesCopy' table from 'titles' table:
 
 		EXEC sp_generate_inserts 'titles', 'titlesCopy'
 
-Example 4:	To generate INSERT statements for 'titles' table for only those titles 
+Example 4:	To generate INSERT statements for 'titles' table for only those titles
 		which contain the word 'Computer' in them:
 		NOTE: Do not complicate the FROM or WHERE clause here. It's assumed that you are good with T-SQL if you are using this parameter
 
@@ -96,7 +97,7 @@ Example 5: 	To specify that you want to include TIMESTAMP column's data as well 
 		EXEC sp_generate_inserts 'titles', @include_timestamp = 1
 
 Example 6:	To print the debug information:
-  
+
 		EXEC sp_generate_inserts 'titles', @debug_mode = 1
 
 Example 7: 	If you are not the owner of the table, use @owner parameter to specify the owner name
@@ -115,19 +116,19 @@ Example 9: 	To generate INSERT statements excluding (ommiting) IDENTITY columns:
 		EXEC sp_generate_inserts mytable, @ommit_identity = 1
 
 Example 10: 	To generate INSERT statements for the TOP 10 rows in the table:
-		
+
 		EXEC sp_generate_inserts mytable, @top = 10
 
 Example 11: 	To generate INSERT statements with only those columns you want:
-		
+
 		EXEC sp_generate_inserts titles, @cols_to_include = "'title','title_id','au_id'"
 
 Example 12: 	To generate INSERT statements by omitting certain columns:
-		
+
 		EXEC sp_generate_inserts titles, @cols_to_exclude = "'title','title_id','au_id'"
 
 Example 13:	To avoid checking the foreign key constraints while loading data with INSERT statements:
-		
+
 		EXEC sp_generate_inserts titles, @disable_constraints = 1
 
 Example 14: 	To exclude computed columns from the INSERT statement:
@@ -144,7 +145,7 @@ IF ((@cols_to_include IS NOT NULL) AND (@cols_to_exclude IS NOT NULL))
 	END
 
 --Making sure the @cols_to_include and @cols_to_exclude parameters are receiving values in proper format
-IF ((@cols_to_include IS NOT NULL) AND (PATINDEX('''%''',@cols_to_include) = 0))
+IF ((@cols_to_include IS NOT NULL) AND (PATINDEX('''%''',@cols_to_include COLLATE Latin1_General_BIN) = 0))
 	BEGIN
 		RAISERROR('Invalid use of @cols_to_include property',16,1)
 		PRINT 'Specify column names surrounded by single quotes and separated by commas'
@@ -152,7 +153,7 @@ IF ((@cols_to_include IS NOT NULL) AND (PATINDEX('''%''',@cols_to_include) = 0))
 		RETURN -1 --Failure. Reason: Invalid use of @cols_to_include property
 	END
 
-IF ((@cols_to_exclude IS NOT NULL) AND (PATINDEX('''%''',@cols_to_exclude) = 0))
+IF ((@cols_to_exclude IS NOT NULL) AND (PATINDEX('''%''',@cols_to_exclude COLLATE Latin1_General_BIN) = 0))
 	BEGIN
 		RAISERROR('Invalid use of @cols_to_exclude property',16,1)
 		PRINT 'Specify column names surrounded by single quotes and separated by commas'
@@ -176,7 +177,7 @@ IF (PARSENAME(@table_name,3)) IS NOT NULL
 
 IF @owner IS NULL
 	BEGIN
-		IF ((OBJECT_ID(@table_name,'U') IS NULL) AND (OBJECT_ID(@table_name,'V') IS NULL)) 
+		IF ((OBJECT_ID(@table_name,'U') IS NULL) AND (OBJECT_ID(@table_name,'V') IS NULL))
 			BEGIN
 				RAISERROR('User table or view not found.',16,1)
 				PRINT 'You may see this error, if you are not the owner of this table or view. In that case use @owner parameter to specify the owner name.'
@@ -191,16 +192,16 @@ ELSE
 				RAISERROR('User table or view not found.',16,1)
 				PRINT 'You may see this error, if you are not the owner of this table. In that case use @owner parameter to specify the owner name.'
 				PRINT 'Make sure you have SELECT permission on that table or view.'
-				RETURN -1 --Failure. Reason: There is no user table or view with this name		
+				RETURN -1 --Failure. Reason: There is no user table or view with this name
 			END
 	END
 
 --Variable declarations
-DECLARE		@Column_ID int, 		
-		@Column_List varchar(8000), 
-		@Column_Name varchar(128), 
-		@Start_Insert varchar(786), 
-		@Data_Type varchar(128), 
+DECLARE		@Column_ID int,
+		@Column_List varchar(8000),
+		@Column_Name varchar(128),
+		@Start_Insert varchar(786),
+		@Data_Type varchar(128),
 		@Actual_Values varchar(8000),	--This is the string that will be finally executed to generate INSERT statements
 		@IDN varchar(128)		--Will contain the IDENTITY column's name in the table
 
@@ -211,20 +212,20 @@ SET @Column_Name = ''
 SET @Column_List = ''
 SET @Actual_Values = ''
 
-IF @owner IS NULL 
+IF @owner IS NULL
 	BEGIN
-		SET @Start_Insert = 'INSERT INTO ' + '[' + RTRIM(COALESCE(@target_table,@table_name)) + ']' 
+		SET @Start_Insert = 'INSERT INTO ' + '[' + RTRIM(COALESCE(@target_table,@table_name)) + ']'
 	END
 ELSE
 	BEGIN
-		SET @Start_Insert = 'INSERT ' + '[' + LTRIM(RTRIM(@owner)) + '].' + '[' + RTRIM(COALESCE(@target_table,@table_name)) + ']' 		
+		SET @Start_Insert = 'INSERT ' + '[' + LTRIM(RTRIM(@owner)) + '].' + '[' + RTRIM(COALESCE(@target_table,@table_name)) + ']'
 	END
 
 
 --To get the first column's ID
 
-SELECT	@Column_ID = MIN(ORDINAL_POSITION) 	
-FROM	INFORMATION_SCHEMA.COLUMNS (NOLOCK) 
+SELECT	@Column_ID = MIN(ORDINAL_POSITION)
+FROM	INFORMATION_SCHEMA.COLUMNS (NOLOCK)
 WHERE 	TABLE_NAME = @table_name AND
 (@owner IS NULL OR TABLE_SCHEMA = @owner)
 
@@ -233,10 +234,10 @@ WHERE 	TABLE_NAME = @table_name AND
 --Loop through all the columns of the table, to get the column names and their data types
 WHILE @Column_ID IS NOT NULL
 	BEGIN
-		SELECT 	@Column_Name = QUOTENAME(COLUMN_NAME), 
-		@Data_Type = DATA_TYPE 
-		FROM 	INFORMATION_SCHEMA.COLUMNS (NOLOCK) 
-		WHERE 	ORDINAL_POSITION = @Column_ID AND 
+		SELECT 	@Column_Name = QUOTENAME(COLUMN_NAME),
+		@Data_Type = DATA_TYPE
+		FROM 	INFORMATION_SCHEMA.COLUMNS (NOLOCK)
+		WHERE 	ORDINAL_POSITION = @Column_ID AND
 		TABLE_NAME = @table_name AND
 		(@owner IS NULL OR TABLE_SCHEMA = @owner)
 
@@ -244,7 +245,7 @@ WHILE @Column_ID IS NOT NULL
 
 		IF @cols_to_include IS NOT NULL --Selecting only user specified columns
 		BEGIN
-			IF CHARINDEX( '''' + SUBSTRING(@Column_Name,2,LEN(@Column_Name)-2) + '''',@cols_to_include) = 0 
+			IF CHARINDEX( '''' + SUBSTRING(@Column_Name,2,LEN(@Column_Name)-2) + '''',@cols_to_include) = 0
 			BEGIN
 				GOTO SKIP_LOOP
 			END
@@ -252,30 +253,30 @@ WHILE @Column_ID IS NOT NULL
 
 		IF @cols_to_exclude IS NOT NULL --Selecting only user specified columns
 		BEGIN
-			IF CHARINDEX( '''' + SUBSTRING(@Column_Name,2,LEN(@Column_Name)-2) + '''',@cols_to_exclude) <> 0 
+			IF CHARINDEX( '''' + SUBSTRING(@Column_Name,2,LEN(@Column_Name)-2) + '''',@cols_to_exclude) <> 0
 			BEGIN
 				GOTO SKIP_LOOP
 			END
 		END
 
 		--Making sure to output SET IDENTITY_INSERT ON/OFF in case the table has an IDENTITY column
-		IF (SELECT COLUMNPROPERTY( OBJECT_ID(QUOTENAME(COALESCE(@owner,USER_NAME())) + '.' + @table_name),SUBSTRING(@Column_Name,2,LEN(@Column_Name) - 2),'IsIdentity')) = 1 
+		IF (SELECT COLUMNPROPERTY( OBJECT_ID(QUOTENAME(COALESCE(@owner,USER_NAME())) + '.' + @table_name),SUBSTRING(@Column_Name,2,LEN(@Column_Name) - 2),'IsIdentity')) = 1
 		BEGIN
 			IF @ommit_identity = 0 --Determing whether to include or exclude the IDENTITY column
 				SET @IDN = @Column_Name
 			ELSE
-				GOTO SKIP_LOOP			
+				GOTO SKIP_LOOP
 		END
-		
+
 		--Making sure whether to output computed columns or not
 		IF @ommit_computed_cols = 1
 		BEGIN
-			IF (SELECT COLUMNPROPERTY( OBJECT_ID(QUOTENAME(COALESCE(@owner,USER_NAME())) + '.' + @table_name),SUBSTRING(@Column_Name,2,LEN(@Column_Name) - 2),'IsComputed')) = 1 
+			IF (SELECT COLUMNPROPERTY( OBJECT_ID(QUOTENAME(COALESCE(@owner,USER_NAME())) + '.' + @table_name),SUBSTRING(@Column_Name,2,LEN(@Column_Name) - 2),'IsComputed')) = 1
 			BEGIN
-				GOTO SKIP_LOOP					
+				GOTO SKIP_LOOP
 			END
 		END
-		
+
 		--Tables with columns of IMAGE data type are not supported for obvious reasons
 		IF(@Data_Type in ('image'))
 			BEGIN
@@ -296,46 +297,46 @@ WHILE @Column_ID IS NOT NULL
 		--the INSERT statement is generated. Care is taken to handle columns with NULL values. Also
 		--making sure, not to lose any data from flot, real, money, smallmomey, datetime columns
 		SET @Actual_Values = @Actual_Values  +
-		CASE 
-			WHEN @Data_Type IN ('char','varchar','nchar','nvarchar') 
-				THEN 
+		CASE
+			WHEN @Data_Type IN ('char','varchar','nchar','nvarchar')
+				THEN
 					'COALESCE('''''''' + REPLACE(RTRIM(' + @Column_Name + '),'''''''','''''''''''')+'''''''',''NULL'')'
-			WHEN @Data_Type IN ('datetime','smalldatetime') 
-				THEN 
-					'COALESCE('''''''' + RTRIM(CONVERT(char,' + @Column_Name + ',109))+'''''''',''NULL'')'
-			WHEN @Data_Type IN ('uniqueidentifier') 
-				THEN  
-					'COALESCE('''''''' + REPLACE(CONVERT(char(255),RTRIM(' + @Column_Name + ')),'''''''','''''''''''')+'''''''',''NULL'')'
-			WHEN @Data_Type IN ('text','ntext') 
-				THEN  
-					'COALESCE('''''''' + REPLACE(CONVERT(char(8000),' + @Column_Name + '),'''''''','''''''''''')+'''''''',''NULL'')'					
-			WHEN @Data_Type IN ('binary','varbinary') 
-				THEN  
-					'COALESCE(RTRIM(CONVERT(char,' + 'CONVERT(int,' + @Column_Name + '))),''NULL'')'  
-			WHEN @Data_Type IN ('timestamp','rowversion') 
-				THEN  
-					CASE 
-						WHEN @include_timestamp = 0 
-							THEN 
-								'''DEFAULT''' 
-							ELSE 
-								'COALESCE(RTRIM(CONVERT(char,' + 'CONVERT(int,' + @Column_Name + '))),''NULL'')'  
+			WHEN @Data_Type IN ('datetime','smalldatetime')
+				THEN
+					'COALESCE('''''''' + RTRIM(CONVERT(char,' + @Column_Name + ',109) COLLATE DATABASE_DEFAULT)+'''''''',''NULL'')'
+			WHEN @Data_Type IN ('uniqueidentifier')
+				THEN
+					'COALESCE('''''''' + REPLACE(CONVERT(char(255),RTRIM(' + @Column_Name + ') COLLATE DATABASE_DEFAULT),'''''''','''''''''''')+'''''''',''NULL'')'
+			WHEN @Data_Type IN ('text','ntext')
+				THEN
+					'COALESCE('''''''' + REPLACE(CONVERT(char(8000),' + @Column_Name + ') COLLATE DATABASE_DEFAULT,'''''''','''''''''''')+'''''''',''NULL'')'
+			WHEN @Data_Type IN ('binary','varbinary')
+				THEN
+					'COALESCE(RTRIM(CONVERT(char,' + 'CONVERT(int,' + @Column_Name + ') COLLATE DATABASE_DEFAULT) COLLATE DATABASE_DEFAULT),''NULL'')'
+			WHEN @Data_Type IN ('timestamp','rowversion')
+				THEN
+					CASE
+						WHEN @include_timestamp = 0
+							THEN
+								'''DEFAULT'''
+							ELSE
+								'COALESCE(RTRIM(CONVERT(char,' + 'CONVERT(int,' + @Column_Name + ') COLLATE DATABASE_DEFAULT) COLLATE DATABASE_DEFAULT),''NULL'')'
 					END
 			WHEN @Data_Type IN ('float','real','money','smallmoney')
 				THEN
-					'COALESCE(LTRIM(RTRIM(' + 'CONVERT(char, ' +  @Column_Name  + ',2)' + ')),''NULL'')' 
-			ELSE 
-				'COALESCE(LTRIM(RTRIM(' + 'CONVERT(char, ' +  @Column_Name  + ')' + ')),''NULL'')' 
+					'COALESCE(LTRIM(RTRIM(' + 'CONVERT(char, ' +  @Column_Name  + ',2) COLLATE DATABASE_DEFAULT' + ')),''NULL'')'
+			ELSE
+				'COALESCE(LTRIM(RTRIM(' + 'CONVERT(char, ' +  @Column_Name  + ') COLLATE DATABASE_DEFAULT' + ')),''NULL'')'
 		END   + '+' +  ''',''' + ' + '
-		
+
 		--Generating the column list for the INSERT statement
-		SET @Column_List = @Column_List +  @Column_Name + ','	
+		SET @Column_List = @Column_List +  @Column_Name + ','
 
 		SKIP_LOOP: --The label used in GOTO
 
-		SELECT 	@Column_ID = MIN(ORDINAL_POSITION) 
-		FROM 	INFORMATION_SCHEMA.COLUMNS (NOLOCK) 
-		WHERE 	TABLE_NAME = @table_name AND 
+		SELECT 	@Column_ID = MIN(ORDINAL_POSITION)
+		FROM 	INFORMATION_SCHEMA.COLUMNS (NOLOCK)
+		WHERE 	TABLE_NAME = @table_name AND
 		ORDINAL_POSITION > @Column_ID AND
 		(@owner IS NULL OR TABLE_SCHEMA = @owner)
 
@@ -347,7 +348,7 @@ WHILE @Column_ID IS NOT NULL
 SET @Column_List = LEFT(@Column_List,len(@Column_List) - 1)
 SET @Actual_Values = LEFT(@Actual_Values,len(@Actual_Values) - 6)
 
-IF LTRIM(@Column_List) = '' 
+IF LTRIM(@Column_List) = ''
 	BEGIN
 		RAISERROR('No columns to select. There should at least be one column to generate the output',16,1)
 		RETURN -1 --Failure. Reason: Looks like all the columns are ommitted using the @cols_to_exclude parameter
@@ -356,23 +357,23 @@ IF LTRIM(@Column_List) = ''
 --Forming the final string that will be executed, to output the INSERT statements
 IF (@include_column_list <> 0)
 	BEGIN
-		SET @Actual_Values = 
-			'SELECT ' +  
-			CASE WHEN @top IS NULL OR @top < 0 THEN '' ELSE ' TOP ' + LTRIM(STR(@top)) + ' ' END + 
-			'''' + RTRIM(@Start_Insert) + 
-			' ''+' + '''(' + RTRIM(@Column_List) +  '''+' + ''')''' + 
-			' +''VALUES(''+ ' +  @Actual_Values  + '+'')''' + ' ' + 
+		SET @Actual_Values =
+			'SELECT ' +
+			CASE WHEN @top IS NULL OR @top < 0 THEN '' ELSE ' TOP ' + LTRIM(STR(@top)) + ' ' END +
+			'''' + RTRIM(@Start_Insert) +
+			' ''+' + '''(' + RTRIM(@Column_List) +  '''+' + ''')''' +
+			' +''VALUES(''+ ' +  @Actual_Values  + '+'')''' + ' ' +
 			COALESCE(@from,' FROM ' + CASE WHEN @owner IS NULL THEN '' ELSE '[' + LTRIM(RTRIM(@owner)) + '].' END + '[' + rtrim(@table_name) + ']' + '(NOLOCK)')
 	END
 ELSE IF (@include_column_list = 0)
 	BEGIN
-		SET @Actual_Values = 
-			'SELECT ' + 
-			CASE WHEN @top IS NULL OR @top < 0 THEN '' ELSE ' TOP ' + LTRIM(STR(@top)) + ' ' END + 
-			'''' + RTRIM(@Start_Insert) + 
-			' '' +''VALUES(''+ ' +  @Actual_Values + '+'')''' + ' ' + 
+		SET @Actual_Values =
+			'SELECT ' +
+			CASE WHEN @top IS NULL OR @top < 0 THEN '' ELSE ' TOP ' + LTRIM(STR(@top)) + ' ' END +
+			'''' + RTRIM(@Start_Insert) +
+			' '' +''VALUES(''+ ' +  @Actual_Values + '+'')''' + ' ' +
 			COALESCE(@from,' FROM ' + CASE WHEN @owner IS NULL THEN '' ELSE '[' + LTRIM(RTRIM(@owner)) + '].' END + '[' + rtrim(@table_name) + ']' + '(NOLOCK)')
-	END	
+	END
 
 --Determining whether to ouput any debug information
 IF @debug_mode =1
@@ -390,7 +391,7 @@ IF @debug_mode =1
 		PRINT '*****END OF DEBUG INFORMATION*****/'
 		PRINT ''
 	END
-		
+
 PRINT '--INSERTs generated by ''sp_generate_inserts'' stored procedure written by Vyas'
 PRINT '--Build number: 22'
 PRINT '--Problems/Suggestions? Contact Vyas @ vyaskn@hotmail.com'
@@ -479,5 +480,3 @@ SET NOCOUNT OFF
 GO
 
 PRINT 'Done'
-
-
