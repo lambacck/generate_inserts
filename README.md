@@ -146,6 +146,9 @@ EXEC sp_generate_inserts MyTable, @ommit_computed_cols = 1
 
 NOTE: Please see the code and read the comments to understand more about how this procedure works!
 
+Output All Tables in a Database
+-------------------------------
+
 To generate INSERT statements for all the tables in your database, execute the following query in that database, which will output the commands, that you need to execute for the same:
 
 ```sql
