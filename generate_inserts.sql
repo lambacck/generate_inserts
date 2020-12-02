@@ -29,7 +29,8 @@ CREATE PROC sp_generate_inserts
 	@cols_to_include varchar(8000) = NULL,	-- List of columns to be included in the INSERT statement
 	@cols_to_exclude varchar(8000) = NULL,	-- List of columns to be excluded from the INSERT statement
 	@disable_constraints bit = 0,		-- When 1, disables foreign key constraints and enables them after the INSERT statements
-	@ommit_computed_cols bit = 0		-- When 1, computed columns will not be included in the INSERT statement
+	@ommit_computed_cols bit = 0,		-- When 1, computed columns will not be included in the INSERT statement
+	@whereClause varchar(8000) = NULL       -- if only part of Table shall be exported, specify where clause excl. the WHERE
 
 )
 AS
@@ -37,7 +38,7 @@ BEGIN
 
 /***********************************************************************************************************
 Procedure:	sp_generate_inserts  (Build 22)
-		(Copyright © 2002 Narayana Vyas Kondreddi. All rights reserved.)
+		(Copyright 2002 Narayana Vyas Kondreddi. All rights reserved.)
 
 Purpose:	To generate INSERT statements from existing data.
 		These INSERTS can be executed to regenerate the data at some other location.
@@ -198,11 +199,11 @@ ELSE
 
 --Variable declarations
 DECLARE		@Column_ID int,
-		@Column_List varchar(8000),
+		@Column_List varchar(max),
 		@Column_Name varchar(128),
 		@Start_Insert varchar(786),
 		@Data_Type varchar(128),
-		@Actual_Values varchar(8000),	--This is the string that will be finally executed to generate INSERT statements
+		@Actual_Values varchar(max),	--This is the string that will be finally executed to generate INSERT statements
 		@IDN varchar(128)		--Will contain the IDENTITY column's name in the table
 
 --Variable Initialization
@@ -364,6 +365,7 @@ IF (@include_column_list <> 0)
 			' ''+' + '''(' + RTRIM(@Column_List) +  '''+' + ''')''' +
 			' +''VALUES(''+ ' +  @Actual_Values  + '+'')''' + ' ' +
 			COALESCE(@from,' FROM ' + CASE WHEN @owner IS NULL THEN '' ELSE '[' + LTRIM(RTRIM(@owner)) + '].' END + '[' + rtrim(@table_name) + ']' + '(NOLOCK)')
+			
 	END
 ELSE IF (@include_column_list = 0)
 	BEGIN
@@ -374,7 +376,12 @@ ELSE IF (@include_column_list = 0)
 			' '' +''VALUES(''+ ' +  @Actual_Values + '+'')''' + ' ' +
 			COALESCE(@from,' FROM ' + CASE WHEN @owner IS NULL THEN '' ELSE '[' + LTRIM(RTRIM(@owner)) + '].' END + '[' + rtrim(@table_name) + ']' + '(NOLOCK)')
 	END
-
+if not @whereClause is null
+	begin
+		set @Actual_Values=@Actual_Values+' where '+@whereClause
+		PRINT 'Partial export limited by WHERE '+@whereClause
+	end
+	
 --Determining whether to ouput any debug information
 IF @debug_mode =1
 	BEGIN
