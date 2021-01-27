@@ -37,7 +37,7 @@ BEGIN
 
 /***********************************************************************************************************
 Procedure:	sp_generate_inserts  (Build 22)
-		(Copyright © 2002 Narayana Vyas Kondreddi. All rights reserved.)
+		(Copyright Â© 2002 Narayana Vyas Kondreddi. All rights reserved.)
 
 Purpose:	To generate INSERT statements from existing data.
 		These INSERTS can be executed to regenerate the data at some other location.
@@ -304,6 +304,9 @@ WHILE @Column_ID IS NOT NULL
 			WHEN @Data_Type IN ('datetime','smalldatetime')
 				THEN
 					'COALESCE('''''''' + RTRIM(CONVERT(char,' + @Column_Name + ',109) COLLATE DATABASE_DEFAULT)+'''''''',''NULL'')'
+			WHEN @Data_Type IN ('datetimeoffset')
+				THEN
+					'COALESCE('''''''' + RTRIM(CONVERT(varchar(50),' + @Column_Name + ',126) COLLATE DATABASE_DEFAULT)+'''''''',''NULL'')'
 			WHEN @Data_Type IN ('uniqueidentifier')
 				THEN
 					'COALESCE('''''''' + REPLACE(CONVERT(varchar(128),RTRIM(' + @Column_Name + ') COLLATE DATABASE_DEFAULT),'''''''','''''''''''')+'''''''',''NULL'')'
